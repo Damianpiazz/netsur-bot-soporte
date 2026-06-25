@@ -1,0 +1,74 @@
+<div class="toolbar">
+  <hgroup>
+    <h1>Dashboard</h1>
+    <p>Panel de control de NetSurBot</p>
+  </hgroup>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-value"><%= stats.clients %></div>
+    <div class="stat-label"><i class="fa-solid fa-users"></i> Clientes</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value"><%= stats.openTickets %></div>
+    <div class="stat-label"><i class="fa-solid fa-ticket"></i> Tickets abiertos</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value"><%= stats.activeOutages %></div>
+    <div class="stat-label"><i class="fa-solid fa-triangle-exclamation"></i> Cortes activos</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value"><%= stats.surveys %></div>
+    <div class="stat-label"><i class="fa-solid fa-star"></i> Encuestas</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value"><%= stats.plans %></div>
+    <div class="stat-label"><i class="fa-solid fa-wifi"></i> Planes</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value"><%= stats.visits %></div>
+    <div class="stat-label"><i class="fa-solid fa-truck"></i> Visitas técnicas</div>
+  </div>
+</div>
+
+<div class="stats-grid" style="grid-template-columns: 1fr 1fr;">
+  <article>
+    <header><strong>Últimos reclamos</strong></header>
+    <% if (stats.recentTickets.length === 0) { %>
+      <p class="stat-label">Sin reclamos registrados</p>
+    <% } else { %>
+      <table>
+        <thead><tr><th>ID</th><th>Cliente</th><th>Estado</th><th>Prioridad</th></tr></thead>
+        <tbody>
+          <% stats.recentTickets.forEach(t => { %>
+            <tr>
+              <td><strong><%= t.id %></strong></td>
+              <td><%= t.clientName %></td>
+              <td><span class="badge badge-<%= t.status === 'open' ? 'yellow' : t.status === 'in_progress' ? 'blue' : t.status === 'resolved' ? 'green' : 'gray' %>"><%= t.status %></span></td>
+              <td><%= t.priority %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  </article>
+
+  <article>
+    <header><strong>Incidencias activas</strong></header>
+    <% if (stats.activeOutagesList.length === 0) { %>
+      <p class="stat-label">No hay incidencias activas</p>
+    <% } else { %>
+      <% stats.activeOutagesList.forEach(o => { %>
+        <details>
+          <summary><strong><%= o.zone %></strong></summary>
+          <p><%= o.description %></p>
+          <small>Inicio: <%= new Date(o.startTime).toLocaleString('es-AR') %></small>
+          <% if (o.estimatedEndTime) { %>
+            <br><small>Resolución estimada: <%= new Date(o.estimatedEndTime).toLocaleString('es-AR') %></small>
+          <% } %>
+        </details>
+      <% }) %>
+    <% } %>
+  </article>
+</div>

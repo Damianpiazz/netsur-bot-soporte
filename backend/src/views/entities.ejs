@@ -1,0 +1,208 @@
+<%
+const labels = {
+  clients: 'Clientes', plans: 'Planes', bills: 'Facturas',
+  tickets: 'Reclamos', outages: 'Cortes', surveys: 'Encuestas',
+  visits: 'Visitas', escalations: 'Derivaciones',
+}
+const icons = {
+  clients: 'fa-users', plans: 'fa-wifi', bills: 'fa-file-invoice-dollar',
+  tickets: 'fa-ticket', outages: 'fa-triangle-exclamation',
+  surveys: 'fa-star', visits: 'fa-truck', escalations: 'fa-headset',
+}
+const schemas = {
+  clients: [
+    ['id','text'],['name','text'],['address','text'],['phone','text'],
+    ['documentNumber','text'],['planId','text'],['planName','text'],
+    ['status','select:active,suspended'],['createdAt','datetime-local'],
+  ],
+  plans: [
+    ['id','text'],['name','text'],['speed','text'],['price','number'],
+    ['description','textarea'],['features','list'],
+  ],
+  bills: [
+    ['id','text'],['clientId','text'],['amount','number'],['dueDate','date'],
+    ['paid','checkbox'],['paidAt','datetime-local'],['period','text'],['downloadUrl','text'],
+  ],
+  tickets: [
+    ['id','text'],['clientId','text'],['clientName','text'],
+    ['category','select:internet,billing,technical_visit,commercial,other'],
+    ['priority','select:low,medium,high'],
+    ['status','select:open,in_progress,resolved,closed'],
+    ['description','textarea'],['resolution','textarea'],
+    ['createdAt','datetime-local'],['updatedAt','datetime-local'],
+  ],
+  outages: [
+    ['id','text'],['zone','text'],['description','textarea'],
+    ['startTime','datetime-local'],['estimatedEndTime','datetime-local'],
+    ['status','select:active,resolved'],
+  ],
+  surveys: [
+    ['id','text'],['clientId','text'],['rating','number'],['comment','textarea'],['createdAt','datetime-local'],
+  ],
+  visits: [
+    ['id','text'],['clientId','text'],['clientName','text'],['address','text'],
+    ['timeSlot','text'],['description','textarea'],
+    ['status','select:pending,scheduled,completed,cancelled'],['createdAt','datetime-local'],
+  ],
+  escalations: [
+    ['id','text'],['clientId','text'],['clientName','text'],['category','text'],
+    ['description','textarea'],['createdAt','datetime-local'],
+  ],
+}
+const label = labels[resource] || resource
+const icon = icons[resource] || 'fa-database'
+const schema = schemas[resource] || []
+%>
+
+<div class="toolbar">
+  <hgroup>
+    <h1><i class="fa-solid <%= icon %>"></i> <%= label %></h1>
+    <p>Alta, edición y baja de <%= label.toLowerCase() %></p>
+  </hgroup>
+  <div class="actions">
+    <input type="search" id="searchInput" class="search-input" placeholder="Buscar..." oninput="renderTable()">
+    <button class="contrast" onclick="openForm()"><i class="fa-solid fa-plus"></i> Nuevo</button>
+  </div>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead><tr id="tableHead"></tr></thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</div>
+
+<div class="modal-overlay" id="formModal">
+  <div class="modal-content">
+    <h3 id="formTitle">Nuevo registro</h3>
+    <form id="crudForm" class="grid"></form>
+    <div class="modal-footer">
+      <button class="secondary" onclick="closeForm()">Cancelar</button>
+      <button id="saveBtn" onclick="saveRow()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const resource = '<%= resource %>'
+const schema = <%- JSON.stringify(schema) %>
+const label = '<%= label %>'
+
+let rows = []
+let selectedId = null
+
+function esc(v) { return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'})[c]) }
+
+function fromApiDate(v) { return v && typeof v === 'string' && v.includes('T') ? v.slice(0, 16) : (v ?? '') }
+
+function displayValue(v) {
+  if (Array.isArray(v)) return v.join(', ')
+  if (typeof v === 'boolean') return v ? 'Sí' : 'No'
+  return v ?? ''
+}
+
+function badgeHtml(status) {
+  const m = { open:'yellow', in_progress:'blue', resolved:'green', closed:'gray', active:'green', suspended:'red', pending:'yellow', scheduled:'blue', completed:'green', cancelled:'red', low:'green', medium:'yellow', high:'red' }
+  const c = m[status] || 'gray'
+  return `<span class="badge badge-${c}">${status}</span>`
+}
+
+async function loadData() {
+  const res = await fetch(`/api/admin/${resource}`)
+  rows = res.ok ? await res.json() : []
+  renderTable()
+}
+
+function renderTable() {
+  const q = document.getElementById('searchInput').value.toLowerCase()
+  const filtered = rows.filter(r => JSON.stringify(r).toLowerCase().includes(q))
+  const cols = schema.map(([f]) => f)
+  const tableHead = document.getElementById('tableHead')
+  const tableBody = document.getElementById('tableBody')
+  tableHead.innerHTML = cols.map(c => `<th>${c}</th>`).join('') + '<th>Acciones</th>'
+  tableBody.innerHTML = filtered.map(r => {
+    const vals = cols.map(c => {
+      const v = displayValue(r[c])
+      if (c === 'status' || c === 'priority') return `<td>${badgeHtml(v)}</td>`
+      if (c === 'paid') return `<td>${v ? '✅ Sí' : '❌ No'}</td>`
+      return `<td>${esc(v)}</td>`
+    }).join('')
+    return `<tr>${vals}<td><div class="actions-cell">
+      <button class="small" onclick="editRow('${r.id}')" title="Editar"><i class="fa-solid fa-pen"></i></button>
+      <button class="small contrast" onclick="deleteRow('${r.id}')" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
+    </div></td></tr>`
+  }).join('')
+}
+
+function editRow(id) {
+  const row = rows.find(r => r.id === id)
+  if (row) openForm(row)
+}
+
+function openForm(row) {
+  selectedId = row?.id || null
+  document.getElementById('formTitle').textContent = selectedId ? `Editar ${selectedId}` : `Nuevo ${label.slice(0,-1)}`
+  const form = document.getElementById('crudForm')
+  form.innerHTML = schema.map(([field, type]) => {
+    const bt = type.split(':')[0]
+    const raw = row ? row[field] : ''
+    const val = bt === 'datetime-local' ? fromApiDate(raw) : displayValue(raw)
+    const disabled = selectedId && field === 'id' ? 'disabled' : ''
+    const cls = bt === 'textarea' || bt === 'list' ? 'full' : ''
+    if (bt === 'textarea' || bt === 'list') {
+      return `<label class="full">${field}<textarea name="${field}" ${disabled}>${esc(val)}</textarea></label>`
+    }
+    if (bt === 'select') {
+      const opts = type.split(':')[1].split(',')
+      return `<label class="${cls}">${field}<select name="${field}" ${disabled}>${opts.map(o => `<option value="${o}" ${o === raw ? 'selected' : ''}>${o}</option>`).join('')}</select></label>`
+    }
+    if (bt === 'checkbox') {
+      return `<label class="${cls}" style="display:flex;align-items:center;gap:.5rem;padding-top:.8rem"><input name="${field}" type="checkbox" ${raw ? 'checked' : ''}> ${field}</label>`
+    }
+    return `<label class="${cls}">${field}<input name="${field}" type="${bt}" value="${esc(val)}" ${disabled}></label>`
+  }).join('')
+  document.getElementById('formModal').classList.add('open')
+}
+
+function closeForm() { document.getElementById('formModal').classList.remove('open') }
+
+function getValue(field, type) {
+  const bt = type.split(':')[0]
+  const el = document.forms['crudForm'].elements[field]
+  if (!el) return null
+  if (bt === 'checkbox') return el.checked
+  if (bt === 'number') return el.value === '' ? null : Number(el.value)
+  if (bt === 'list') return el.value.split(',').map(v => v.trim()).filter(Boolean)
+  if (bt === 'datetime-local') return el.value ? new Date(el.value).toISOString() : ''
+  return el.value
+}
+
+async function saveRow() {
+  const payload = {}
+  schema.forEach(([field, type]) => { payload[field] = getValue(field, type) })
+  const url = selectedId ? `/api/admin/${resource}/${selectedId}` : `/api/admin/${resource}`
+  const method = selectedId ? 'PUT' : 'POST'
+  try {
+    const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+    const data = await res.json()
+    if (!res.ok) { showToast(data.error || 'Error al guardar', true); return }
+    closeForm()
+    await loadData()
+    showToast('Registro guardado')
+  } catch { showToast('Error de conexión', true) }
+}
+
+async function deleteRow(id) {
+  if (!confirm(`¿Eliminar ${id}?`)) return
+  try {
+    const res = await fetch(`/api/admin/${resource}/${id}`, { method: 'DELETE' })
+    const data = await res.json()
+    if (!res.ok) { showToast(data.error || 'Error al eliminar', true); return }
+    await loadData()
+    showToast('Registro eliminado')
+  } catch { showToast('Error de conexión', true) }
+}
+
+document.addEventListener('DOMContentLoaded', loadData)
+document.getElementById('formModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeForm() })
+</script>

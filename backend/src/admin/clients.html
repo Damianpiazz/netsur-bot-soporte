@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NetSurBot - Clientes</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root { --bulma-body-background-color: #0a0a0f; }
+    .sidebar { min-height: 100vh; }
+    @media screen and (max-width: 768px) { .sidebar { min-height: auto; } }
+  </style>
+</head>
+<body>
+  <nav class="navbar is-dark" role="navigation">
+    <div class="navbar-brand">
+      <a class="navbar-item is-size-4 has-text-weight-bold" href="/admin/">
+        <span class="icon-text"><span class="icon"><i class="fas fa-robot"></i></span><span>NetSurBot</span></span>
+      </a>
+      <a role="button" class="navbar-burger" data-target="navMenu"><span></span><span></span><span></span></a>
+    </div>
+  </nav>
+  <div class="columns is-gapless">
+    <div class="column is-2 sidebar" style="background: #0d0d14;">
+      <aside class="menu p-3">
+        <p class="menu-label">Navegación</p>
+        <ul class="menu-list">
+          <li><a href="/admin/"><span class="icon"><i class="fas fa-chart-pie"></i></span> Dashboard</a></li>
+          <li><a href="/admin/clients.html" class="is-active"><span class="icon"><i class="fas fa-users"></i></span> Clientes</a></li>
+          <li><a href="/admin/tickets.html"><span class="icon"><i class="fas fa-ticket"></i></span> Tickets</a></li>
+          <li><a href="/admin/outages.html"><span class="icon"><i class="fas fa-exclamation-triangle"></i></span> Cortes</a></li>
+          <li><a href="/admin/surveys.html"><span class="icon"><i class="fas fa-star"></i></span> Encuestas</a></li>
+          <li><a href="/admin/visits.html"><span class="icon"><i class="fas fa-truck"></i></span> Visitas</a></li>
+          <li><a href="/admin/templates.html"><span class="icon"><i class="fas fa-file-alt"></i></span> Plantillas</a></li>
+        </ul>
+      </aside>
+    </div>
+    <div class="column p-5">
+      <h1 class="title is-3">Clientes</h1>
+      <div class="field has-addons mb-4">
+        <div class="control is-expanded">
+          <input class="input" id="clientSearch" type="text" placeholder="Buscar por ID, nombre o teléfono...">
+        </div>
+        <div class="control"><button class="button is-info" onclick="searchClient()"><span class="icon"><i class="fas fa-search"></i></span></button></div>
+      </div>
+      <div id="clientResult"></div>
+      <h2 class="title is-5 mt-5">Todos los clientes</h2>
+      <div id="allClients"><p class="has-text-grey">Cargando...</p></div>
+    </div>
+  </div>
+  <script>
+    const clientIds = ['1001', '1002', '1003', '1004', '1005']
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelector('.navbar-burger')?.addEventListener('click', () => {
+        document.getElementById('navMenu')?.classList.toggle('is-active')
+      })
+      loadAllClients()
+    })
+
+    async function loadAllClients() {
+      const container = document.getElementById('allClients')
+      const rows = []
+      for (const id of clientIds) {
+        try {
+          const c = await fetch(`/api/clients/${id}`).then(r => r.json())
+          rows.push(c)
+        } catch {}
+      }
+      container.innerHTML = `<table class="table is-fullwidth is-hoverable is-striped">
+        <thead><tr><th>ID</th><th>Nombre</th><th>Plan</th><th>Estado</th><th>Teléfono</th></tr></thead>
+        <tbody>${rows.map(c => `<tr>
+          <td><strong>${c.id}</strong></td>
+          <td>${c.name}</td>
+          <td>${c.planName}</td>
+          <td><span class="tag ${c.status === 'active' ? 'is-success' : 'is-danger'}">${c.status === 'active' ? 'Activo' : 'Suspendido'}</span></td>
+          <td>${c.phone}</td>
+        </tr>`).join('')}</tbody></table>`
+    }
+
+    async function searchClient() {
+      const id = document.getElementById('clientSearch').value.trim()
+      const container = document.getElementById('clientResult')
+      if (!id) { container.innerHTML = ''; return }
+      try {
+        const c = await fetch(`/api/clients/${id}`).then(r => { if (!r.ok) throw Error(); return r.json() })
+        container.innerHTML = `<div class="box">
+          <h3 class="title is-5">${c.name}</h3>
+          <p><strong>ID:</strong> ${c.id}</p>
+          <p><strong>Dirección:</strong> ${c.address}</p>
+          <p><strong>Teléfono:</strong> ${c.phone}</p>
+          <p><strong>Plan:</strong> ${c.planName}</p>
+          <p><strong>Estado:</strong> <span class="tag ${c.status === 'active' ? 'is-success' : 'is-danger'}">${c.status === 'active' ? 'Activo' : 'Suspendido'}</span></p>
+          <a href="/admin/tickets.html?client=${c.id}" class="button is-small is-info mt-2">Ver tickets</a>
+        </div>`
+      } catch {
+        container.innerHTML = '<div class="notification is-danger">Cliente no encontrado</div>'
+      }
+    }
+  </script>
+</body>
+</html>

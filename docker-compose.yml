@@ -1,0 +1,72 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: netsur-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB_NAME:-netsurbot}
+      POSTGRES_USER: ${POSTGRES_DB_USER:-netsur}
+      POSTGRES_PASSWORD: ${POSTGRES_DB_PASSWORD:-changeme}
+    ports:
+      - "${POSTGRES_DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - netsur-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_DB_USER:-netsur} -d ${POSTGRES_DB_NAME:-netsurbot}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: netsur-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PORT: ${BACKEND_PORT:-3001}
+      POSTGRES_DB_HOST: postgres
+      POSTGRES_DB_PORT: ${POSTGRES_DB_PORT:-5432}
+      POSTGRES_DB_NAME: ${POSTGRES_DB_NAME:-netsurbot}
+      POSTGRES_DB_USER: ${POSTGRES_DB_USER:-netsur}
+      POSTGRES_DB_PASSWORD: ${POSTGRES_DB_PASSWORD:-changeme}
+    ports:
+      - "${BACKEND_PORT:-3001}:3001"
+    networks:
+      - netsur-network
+
+  bot:
+    build:
+      context: ./netsur-whatsap-bot
+      dockerfile: Dockerfile
+    container_name: netsur-bot
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      PORT: ${BOT_PORT:-3008}
+      BACKEND_URL: ${BACKEND_URL:-http://backend:3001}
+      POSTGRES_DB_HOST: postgres
+      POSTGRES_DB_PORT: ${POSTGRES_DB_PORT:-5432}
+      POSTGRES_DB_NAME: ${POSTGRES_DB_NAME:-netsurbot}
+      POSTGRES_DB_USER: ${POSTGRES_DB_USER:-netsur}
+      POSTGRES_DB_PASSWORD: ${POSTGRES_DB_PASSWORD:-changeme}
+    ports:
+      - "${BOT_PORT:-3008}:3008"
+    volumes:
+      - bot_auth:/app/bot_sessions
+    networks:
+      - netsur-network
+
+networks:
+  netsur-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  bot_auth:

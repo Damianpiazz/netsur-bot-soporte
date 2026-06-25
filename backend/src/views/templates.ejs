@@ -1,0 +1,25 @@
+<div class="toolbar">
+  <hgroup>
+    <h1><i class="fa-solid fa-file-alt"></i> Plantillas de Mensajes</h1>
+    <p>Vista previa de las plantillas que usa el bot en las conversaciones</p>
+  </hgroup>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:var(--pico-spacing)">
+  <% const tmpls = [
+    { key: 'welcome', title: 'Menú Principal', content: `🙌 Hola! Soy *NetSurBot*, el asistente virtual de *NetSur Conectividad*.\n\nElegí una opción para continuar:\n\n1️⃣ *Problemas de Internet*\n2️⃣ *Facturación*\n3️⃣ *Gestión de Servicios / Cambio de Plan*\n4️⃣ *Estado de Reclamos*\n5️⃣ *Hablar con un Operador*\n6️⃣ *Estado del Servicio*\n7️⃣ *Solicitar Visita Técnica*\n8️⃣ *Historial de Consultas*` },
+    { key: 'internet', title: 'Diagnóstico de Internet', content: `🌐 *Problemas de Internet*\n\nSeleccioná tu situación:\n\n1️⃣ *Sin conexión*\n2️⃣ *Internet lento*\n3️⃣ *Cortes frecuentes*\n4️⃣ *Luz roja en el módem*\n5️⃣ *Volver al menú principal*` },
+    { key: 'billing', title: 'Facturación', content: `🧾 *Facturación*\n\nSeleccioná una opción:\n\n1️⃣ *Consultar deuda pendiente*\n2️⃣ *Ver próxima factura*\n3️⃣ *Historial de facturas*\n4️⃣ *Medios de pago*\n5️⃣ *Volver al menú principal*` },
+    { key: 'services', title: 'Gestión de Servicios', content: `📡 *Gestión de Servicios*\n\nSeleccioná una opción:\n\n1️⃣ *Ver mi plan actual*\n2️⃣ *Ver planes disponibles*\n3️⃣ *Solicitar cambio de plan*\n4️⃣ *Volver al menú principal*` },
+    { key: 'claims', title: 'Estado de Reclamos', content: `🎫 *Estado de Reclamos*\n\n1️⃣ *Consultar reclamo por número*\n2️⃣ *Ver mis reclamos*\n3️⃣ *Volver al menú principal*` },
+    { key: 'operator', title: 'Derivación a Operador', content: `👤 *Derivación a Operador*\n\nDecinos brevemente tu consulta y te conectamos con un operador.` },
+    { key: 'payment', title: 'Medios de Pago', content: `💳 *Medios de Pago*\n\n🏦 *Transferencia Bancaria*\n  CBU: 0000003100012345678901\n  Titular: NetSur Conectividad\n\n💻 *Mercado Pago*\n  A través de la app\n\n📍 *Pago Fácil / Rapipago*\n  Con código de barras\n\n💳 *Tarjeta de crédito/débito*\n  En oficinas o link de pago` },
+    { key: 'survey', title: 'Encuesta de Satisfacción', content: `📝 *Encuesta de Satisfacción*\n\n¿Cómo calificarías tu experiencia?\n\n1 ⭐ - Muy mala\n2 ⭐ - Mala\n3 ⭐ - Regular\n4 ⭐ - Buena\n5 ⭐ - Excelente` },
+  ] %>
+  <% tmpls.forEach(t => { %>
+    <article>
+      <header><strong><%= t.title %></strong></header>
+      <pre style="font-size:.82rem;white-space:pre-wrap;word-break:break-word;background:var(--pico-code-background-color);padding:.6rem;border-radius:var(--pico-border-radius);margin:0"><%= t.content %></pre>
+    </article>
+  <% }) %>
+</div>

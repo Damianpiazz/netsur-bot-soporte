@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NetSurBot - Tickets</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>:root { --bulma-body-background-color: #0a0a0f; } .sidebar { min-height: 100vh; } @media screen and (max-width: 768px) { .sidebar { min-height: auto; } }</style>
+</head>
+<body>
+  <nav class="navbar is-dark" role="navigation">
+    <div class="navbar-brand">
+      <a class="navbar-item is-size-4 has-text-weight-bold" href="/admin/">
+        <span class="icon-text"><span class="icon"><i class="fas fa-robot"></i></span><span>NetSurBot</span></span>
+      </a>
+      <a role="button" class="navbar-burger" data-target="navMenu"><span></span><span></span><span></span></a>
+    </div>
+  </nav>
+  <div class="columns is-gapless">
+    <div class="column is-2 sidebar" style="background: #0d0d14;">
+      <aside class="menu p-3">
+        <p class="menu-label">Navegación</p>
+        <ul class="menu-list">
+          <li><a href="/admin/"><span class="icon"><i class="fas fa-chart-pie"></i></span> Dashboard</a></li>
+          <li><a href="/admin/clients.html"><span class="icon"><i class="fas fa-users"></i></span> Clientes</a></li>
+          <li><a href="/admin/tickets.html" class="is-active"><span class="icon"><i class="fas fa-ticket"></i></span> Tickets</a></li>
+          <li><a href="/admin/outages.html"><span class="icon"><i class="fas fa-exclamation-triangle"></i></span> Cortes</a></li>
+          <li><a href="/admin/surveys.html"><span class="icon"><i class="fas fa-star"></i></span> Encuestas</a></li>
+          <li><a href="/admin/visits.html"><span class="icon"><i class="fas fa-truck"></i></span> Visitas</a></li>
+          <li><a href="/admin/templates.html"><span class="icon"><i class="fas fa-file-alt"></i></span> Plantillas</a></li>
+        </ul>
+      </aside>
+    </div>
+    <div class="column p-5">
+      <h1 class="title is-3">Tickets / Reclamos</h1>
+      <div class="field has-addons mb-4">
+        <div class="control is-expanded">
+          <input class="input" id="ticketSearch" type="text" placeholder="Buscar por número (ej: TK-1001) o ID de cliente (ej: 1001)...">
+        </div>
+        <div class="control"><button class="button is-info" onclick="searchTicket()"><span class="icon"><i class="fas fa-search"></i></span></button></div>
+      </div>
+      <div id="ticketResult"></div>
+      <div class="buttons mb-4">
+        <button class="button is-small" onclick="filterTickets('all')">Todos</button>
+        <button class="button is-small is-warning" onclick="filterTickets('open')">Abiertos</button>
+        <button class="button is-small is-info" onclick="filterTickets('in_progress')">En Progreso</button>
+        <button class="button is-small is-success" onclick="filterTickets('resolved')">Resueltos</button>
+      </div>
+      <div id="ticketList"><p class="has-text-grey">Cargando...</p></div>
+    </div>
+  </div>
+  <script>
+    const allTicketIds = ['TK-1001', 'TK-1002', 'TK-1003']
+    let allTickets = []
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelector('.navbar-burger')?.addEventListener('click', () => {
+        document.getElementById('navMenu')?.classList.toggle('is-active')
+      })
+      loadTickets()
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('client')) {
+        document.getElementById('ticketSearch').value = params.get('client')
+        searchTicket()
+      }
+    })
+
+    async function loadTickets() {
+      const tickets = []
+      for (const id of allTicketIds) {
+        try {
+          const t = await fetch(`/api/tickets/${id}`).then(r => { if (!r.ok) throw Error(); return r.json() })
+          tickets.push(t)
+        } catch {}
+      }
+      allTickets = tickets
+      renderTickets(tickets)
+    }
+
+    function renderTickets(tickets) {
+      const container = document.getElementById('ticketList')
+      if (tickets.length === 0) { container.innerHTML = '<p class="has-text-grey">Sin tickets</p>'; return }
+      const statusMap = { open: 'is-warning', in_progress: 'is-info', resolved: 'is-success', closed: 'is-light' }
+      const statusLabel = { open: 'Abierto', in_progress: 'En progreso', resolved: 'Resuelto', closed: 'Cerrado' }
+      const priorityLabel = { high: '🔴 Alta', medium: '🟡 Media', low: '🟢 Baja' }
+      container.innerHTML = `<table class="table is-fullwidth is-hoverable is-striped">
+        <thead><tr><th>ID</th><th>Cliente</th><th>Categoría</th><th>Prioridad</th><th>Estado</th><th>Descripción</th><th>Creado</th></tr></thead>
+        <tbody>${tickets.map(t => `<tr>
+          <td><strong>${t.id}</strong></td>
+          <td>${t.clientName}</td>
+          <td>${t.category}</td>
+          <td>${priorityLabel[t.priority] || t.priority}</td>
+          <td><span class="tag ${statusMap[t.status] || 'is-light'}">${statusLabel[t.status] || t.status}</span></td>
+          <td class="is-size-7">${t.description.substring(0, 50)}${t.description.length > 50 ? '...' : ''}</td>
+          <td class="is-size-7">${new Date(t.createdAt).toLocaleDateString('es-AR')}</td>
+        </tr>`).join('')}</tbody></table>`
+    }
+
+    function filterTickets(status) {
+      if (status === 'all') return renderTickets(allTickets)
+      renderTickets(allTickets.filter(t => t.status === status))
+    }
+
+    async function searchTicket() {
+      const query = document.getElementById('ticketSearch').value.trim().toUpperCase()
+      const container = document.getElementById('ticketResult')
+      if (!query) { container.innerHTML = ''; return }
+      try {
+        let tickets = []
+        if (query.startsWith('TK-')) {
+          const t = await fetch(`/api/tickets/${query}`).then(r => { if (!r.ok) throw Error(); return r.json() })
+          tickets = [t]
+        } else {
+          const h = await fetch(`/api/clients/${query}/history`).then(r => { if (!r.ok) throw Error(); return r.json() })
+          tickets = h.tickets
+        }
+        const statusLabel = { open: 'Abierto', in_progress: 'En progreso', resolved: 'Resuelto', closed: 'Cerrado' }
+        container.innerHTML = tickets.map(t => `<div class="box">
+          <p><strong>${t.id}</strong> - <span class="tag ${t.status === 'open' ? 'is-warning' : t.status === 'in_progress' ? 'is-info' : 'is-success'}">${statusLabel[t.status] || t.status}</span></p>
+          <p class="is-size-7"><strong>Cliente:</strong> ${t.clientName} | <strong>Categoría:</strong> ${t.category} | <strong>Prioridad:</strong> ${t.priority}</p>
+          <p class="is-size-7">${t.description}</p>
+          ${t.resolution ? `<p class="is-size-7 has-text-success">Resolución: ${t.resolution}</p>` : ''}
+        </div>`).join('')
+      } catch { container.innerHTML = '<div class="notification is-danger">No encontrado</div>' }
+    }
+  </script>
+</body>
+</html>

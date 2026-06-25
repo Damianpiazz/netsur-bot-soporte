@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NetSurBot - Encuestas</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>:root { --bulma-body-background-color: #0a0a0f; } .sidebar { min-height: 100vh; } @media screen and (max-width: 768px) { .sidebar { min-height: auto; } }</style>
+</head>
+<body>
+  <nav class="navbar is-dark" role="navigation">
+    <div class="navbar-brand">
+      <a class="navbar-item is-size-4 has-text-weight-bold" href="/admin/">
+        <span class="icon-text"><span class="icon"><i class="fas fa-robot"></i></span><span>NetSurBot</span></span>
+      </a>
+      <a role="button" class="navbar-burger" data-target="navMenu"><span></span><span></span><span></span></a>
+    </div>
+  </nav>
+  <div class="columns is-gapless">
+    <div class="column is-2 sidebar" style="background: #0d0d14;">
+      <aside class="menu p-3">
+        <p class="menu-label">Navegación</p>
+        <ul class="menu-list">
+          <li><a href="/admin/"><span class="icon"><i class="fas fa-chart-pie"></i></span> Dashboard</a></li>
+          <li><a href="/admin/clients.html"><span class="icon"><i class="fas fa-users"></i></span> Clientes</a></li>
+          <li><a href="/admin/tickets.html"><span class="icon"><i class="fas fa-ticket"></i></span> Tickets</a></li>
+          <li><a href="/admin/outages.html"><span class="icon"><i class="fas fa-exclamation-triangle"></i></span> Cortes</a></li>
+          <li><a href="/admin/surveys.html" class="is-active"><span class="icon"><i class="fas fa-star"></i></span> Encuestas</a></li>
+          <li><a href="/admin/visits.html"><span class="icon"><i class="fas fa-truck"></i></span> Visitas</a></li>
+          <li><a href="/admin/templates.html"><span class="icon"><i class="fas fa-file-alt"></i></span> Plantillas</a></li>
+        </ul>
+      </aside>
+    </div>
+    <div class="column p-5">
+      <h1 class="title is-3">Encuestas de Satisfacción</h1>
+      <div class="columns mb-4">
+        <div class="column is-3">
+          <div class="card"><div class="card-content has-text-centered"><p class="heading">Promedio</p><p class="title is-1 has-text-warning" id="avgRating">-</p></div></div>
+        </div>
+        <div class="column is-3">
+          <div class="card"><div class="card-content has-text-centered"><p class="heading">Total Encuestas</p><p class="title is-1" id="totalSurveys">0</p></div></div>
+        </div>
+      </div>
+      <div id="surveyList"><p class="has-text-grey">Completá una encuesta desde el bot para ver resultados aquí.</p></div>
+    </div>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelector('.navbar-burger')?.addEventListener('click', () => {
+        document.getElementById('navMenu')?.classList.toggle('is-active')
+      })
+      loadSurveys()
+    })
+
+    async function loadSurveys() {
+      try {
+        const data = await fetch('/api/surveys/average').then(r => r.json())
+        document.getElementById('avgRating').textContent = data.total > 0 ? data.average : '-'
+        document.getElementById('totalSurveys').textContent = data.total
+      } catch {}
+    }
+  </script>
+</body>
+</html>

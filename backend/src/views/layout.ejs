@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title ? title + ' - ' : '' %>NetSur Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root {
+      --pico-font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+      --pico-font-family-monospace: 'JetBrains Mono', 'Fira Code', monospace;
+      --pico-color: #0b1a2e;
+      --pico-text-selection-color: rgba(37,99,235,.2);
+      --pico-muted-color: #334155;
+      --pico-muted-border-color: #e2e8f0;
+      --pico-primary: #2563eb;
+      --pico-primary-hover: #1d4ed8;
+      --pico-primary-background: #2563eb;
+      --pico-primary-inverse: #ffffff;
+      --pico-card-background-color: #ffffff;
+      --pico-card-border-color: #e2e8f0;
+      --pico-del-color: #dc2626;
+      --pico-del-color-hover: #b91c1c;
+      --pico-table-border-color: #e2e8f0;
+      --pico-form-element-border-color: #cbd5e1;
+      --pico-form-element-placeholder-color: #94a3b8;
+      --pico-line-height: 1.5;
+    }
+    body {
+      display: flex; min-height: 100vh; margin: 0;
+      background: #f8fafc; color: #0b1a2e;
+    }
+    h1, h2, h3, h4, h5, h6 { color: #0b1a2e; }
+
+    /* ── Sidebar ── */
+    aside {
+      width: 220px; min-width: 220px;
+      background: #0b1a2e;
+      display: flex; flex-direction: column;
+      position: sticky; top: 0; height: 100vh;
+    }
+    aside .brand {
+      font-size: 1.05rem; font-weight: 700;
+      color: #f1f5f9; padding: 1rem 1rem .65rem;
+      display: flex; align-items: center; gap: .5rem;
+      letter-spacing: -.015em;
+    }
+    aside .brand i {
+      background: linear-gradient(135deg, #3b82f6, #06b6d4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    aside nav { flex: 1; padding: .25rem .5rem; }
+    aside nav a {
+      display: flex; align-items: center; gap: .65rem;
+      padding: .45rem .65rem; border-radius: 6px;
+      text-decoration: none; color: #cbd5e1;
+      font-size: .875rem; font-weight: 500;
+      transition: background .12s, color .12s;
+      position: relative;
+    }
+    aside nav a:hover { background: #0f2640; color: #f1f5f9; }
+    aside nav a.active {
+      background: linear-gradient(135deg, #1d4ed8, #0891b2);
+      color: #ffffff; font-weight: 600;
+    }
+    aside nav a i { width: 1.1rem; text-align: center; font-size: .9rem; }
+    aside nav a.active i { color: #ffffff; }
+    aside hr { margin: .35rem .65rem; border: none; border-top: 1px solid #1e3a5f; }
+    aside footer {
+      font-size: .7rem; color: #cbd5e1;
+      border-top: 1px solid #1e3a5f; padding: .75rem 1rem;
+    }
+
+    /* ── Main content ── */
+    main {
+      flex: 1; padding: 1.25rem; overflow-y: auto;
+      max-width: calc(100vw - 220px);
+    }
+    .toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;
+    }
+    .toolbar hgroup { margin: 0; }
+    .toolbar hgroup h1 {
+      font-size: 1.35rem; font-weight: 700; margin: 0;
+      color: #0b1a2e;
+    }
+    .toolbar hgroup p {
+      font-size: .85rem; color: #334155; margin: .15rem 0 0;
+    }
+    .toolbar .actions { display: flex; gap: .5rem; align-items: center; }
+
+    /* ── Stats grid ── */
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 1rem; margin-bottom: 1rem;
+    }
+    .stat-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px; padding: 1rem; text-align: center;
+    }
+    .stat-card .stat-value { font-size: 1.75rem; font-weight: 700; color: #0b1a2e; }
+    .stat-card .stat-label { font-size: .8rem; color: #334155; margin-top: .15rem; }
+
+    /* ── Table ── */
+    .table-wrap {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px; overflow-x: auto;
+    }
+    table { margin-bottom: 0; width: 100%; border-collapse: collapse; }
+    table th {
+      white-space: nowrap; font-size: .72rem; text-transform: uppercase;
+      letter-spacing: .05em; color: #334155;
+      background: #f8fafc; padding: .6rem .5rem;
+      border-bottom: 1px solid #e2e8f0;
+      text-align: left; font-weight: 600;
+    }
+    table td {
+      padding: .5rem; font-size: .85rem;
+      border-bottom: 1px solid #f1f5f9; vertical-align: middle;
+      color: #0b1a2e;
+    }
+    table tr:last-child td { border-bottom: none; }
+    table tr:hover td { background: #f8fafc; }
+    .actions-cell { display: flex; gap: .3rem; }
+
+    /* ── Badges (WCAG AA verified) ── */
+    .badge {
+      display: inline-block; padding: .12rem .5rem; border-radius: 999px;
+      font-size: .7rem; font-weight: 600; white-space: nowrap;
+    }
+    .badge-green { background: #dcfce7; color: #166534; }
+    .badge-red   { background: #fee2e2; color: #991b1b; }
+    .badge-yellow{ background: #fef9c3; color: #854d0e; }
+    .badge-blue  { background: #dbeafe; color: #1e40af; }
+    .badge-gray  { background: #f1f5f9; color: #334155; }
+
+    /* ── Forzar fondos claros en todos los elementos Pico ── */
+    article,
+    article > header,
+    article > footer {
+      background: #ffffff !important;
+      border-color: #e2e8f0 !important;
+      color: #0b1a2e !important;
+    }
+    details, summary { background: transparent; color: #0b1a2e; }
+    details summary { color: #0b1a2e; font-weight: 600; background: transparent; }
+    pre, code, kbd, samp {
+      background: #f1f5f9 !important;
+      color: #0b1a2e !important;
+      border-color: #e2e8f0;
+    }
+    small { color: #334155; font-size: .78rem; }
+
+    /* ── Form controls ── */
+    .search-input { max-width: 280px; }
+    input:not([type=checkbox]):not([type=radio]), select, textarea {
+      border-color: #cbd5e1; color: #0b1a2e; background: #ffffff;
+    }
+    input:not([type=checkbox]):not([type=radio])::placeholder { color: #64748b; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(11,26,46,.55); z-index: 1000;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-content {
+      background: #ffffff;
+      border-radius: 10px; padding: 1.25rem; width: 90%; max-width: 560px;
+      max-height: 85vh; overflow-y: auto;
+      box-shadow: 0 10px 30px rgba(11,26,46,.18);
+    }
+    .modal-content h3 { margin: 0 0 .75rem; font-size: 1.1rem; color: #0b1a2e; }
+    .modal-content .grid { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+    .modal-content .grid .full { grid-column: 1 / -1; }
+    .modal-content label { font-size: .82rem; font-weight: 500; color: #0b1a2e; }
+    .modal-footer { display: flex; gap: .5rem; justify-content: flex-end; margin-top: 1rem; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 1rem; right: 1rem;
+      background: #0b1a2e; color: #f8fafc;
+      padding: .75rem 1.25rem; border-radius: 8px;
+      font-size: .875rem; z-index: 2000;
+      opacity: 0; transition: opacity .25s;
+      box-shadow: 0 4px 14px rgba(11,26,46,.18);
+    }
+    .toast.show { opacity: 1; }
+    .toast.error { background: #b91c1c; color: #ffffff; }
+
+    /* ── Small buttons ── */
+    button.small {
+      padding: .25rem .5rem; font-size: .78rem;
+      border: 1px solid #e2e8f0; border-radius: 5px;
+      background: #ffffff; color: #0b1a2e;
+      cursor: pointer; line-height: 1;
+    }
+    button.small:hover { background: #f1f5f9; border-color: #cbd5e1; }
+    button.small.contrast { background: #fee2e2; border-color: #fecaca; color: #991b1b; }
+    button.small.contrast:hover { background: #fecaca; }
+
+    /* ── Focus ── */
+    a:focus-visible, button:focus-visible,
+    input:focus-visible, select:focus-visible, textarea:focus-visible {
+      outline: 2px solid #2563eb; outline-offset: 2px;
+    }
+
+    @media (max-width: 768px) {
+      body { flex-direction: column; }
+      aside { width: 100%; min-width: 100%; height: auto; position: static; flex-direction: row; flex-wrap: wrap; padding: .25rem; }
+      aside .brand { padding: .4rem .5rem; margin-bottom: 0; font-size: .95rem; }
+      aside nav { display: flex; flex-wrap: wrap; gap: .2rem; padding: 0 .25rem .25rem; }
+      aside nav a { font-size: .78rem; padding: .25rem .45rem; }
+      aside hr { display: none; }
+      aside footer { display: none; }
+      main { max-width: 100%; padding: .75rem; }
+      .modal-content .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <aside>
+    <div class="brand"><i class="fa-solid fa-network-wired"></i> NetSur Admin</div>
+    <nav>
+      <a href="/admin/" class="<%= currentPage === 'dashboard' ? 'active' : '' %>">
+        <i class="fa-solid fa-chart-pie"></i> Dashboard
+      </a>
+      <a href="/admin/entities/clients" class="<%= currentPage === 'clients' ? 'active' : '' %>">
+        <i class="fa-solid fa-users"></i> Clientes
+      </a>
+      <a href="/admin/entities/plans" class="<%= currentPage === 'plans' ? 'active' : '' %>">
+        <i class="fa-solid fa-wifi"></i> Planes
+      </a>
+      <a href="/admin/entities/bills" class="<%= currentPage === 'bills' ? 'active' : '' %>">
+        <i class="fa-solid fa-file-invoice-dollar"></i> Facturas
+      </a>
+      <a href="/admin/entities/tickets" class="<%= currentPage === 'tickets' ? 'active' : '' %>">
+        <i class="fa-solid fa-ticket"></i> Reclamos
+      </a>
+      <a href="/admin/entities/outages" class="<%= currentPage === 'outages' ? 'active' : '' %>">
+        <i class="fa-solid fa-triangle-exclamation"></i> Cortes
+      </a>
+      <a href="/admin/entities/surveys" class="<%= currentPage === 'surveys' ? 'active' : '' %>">
+        <i class="fa-solid fa-star"></i> Encuestas
+      </a>
+      <a href="/admin/entities/visits" class="<%= currentPage === 'visits' ? 'active' : '' %>">
+        <i class="fa-solid fa-truck"></i> Visitas
+      </a>
+      <a href="/admin/entities/escalations" class="<%= currentPage === 'escalations' ? 'active' : '' %>">
+        <i class="fa-solid fa-headset"></i> Derivaciones
+      </a>
+      <hr>
+      <a href="/admin/templates" class="<%= currentPage === 'templates' ? 'active' : '' %>">
+        <i class="fa-solid fa-file-alt"></i> Plantillas
+      </a>
+    </nav>
+    <footer>NetSurBot v1.0</footer>
+  </aside>
+  <main>
+    <%- body %>
+  </main>
+  <div id="toast" class="toast"></div>
+  <script>
+    function showToast(msg, isError = false) {
+      const t = document.getElementById('toast')
+      t.textContent = msg
+      t.className = 'toast show' + (isError ? ' error' : '')
+      setTimeout(() => t.classList.remove('show'), 3000)
+    }
+  </script>
+</body>
+</html>

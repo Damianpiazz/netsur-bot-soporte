@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NetSurBot - Plantillas</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root { --bulma-body-background-color: #0a0a0f; }
+    .sidebar { min-height: 100vh; }
+    @media screen and (max-width: 768px) { .sidebar { min-height: auto; } }
+    .template-card { cursor: pointer; transition: all 0.2s; }
+    * { box-shadow: none !important; }
+    .template-card:hover { transform: translateY(-2px); }
+    pre { white-space: pre-wrap; word-break: break-word; }
+  </style>
+</head>
+<body>
+  <nav class="navbar is-dark" role="navigation">
+    <div class="navbar-brand">
+      <a class="navbar-item is-size-4 has-text-weight-bold" href="/admin/">
+        <span class="icon-text"><span class="icon"><i class="fas fa-robot"></i></span><span>NetSurBot</span></span>
+      </a>
+      <a role="button" class="navbar-burger" data-target="navMenu"><span></span><span></span><span></span></a>
+    </div>
+  </nav>
+  <div class="columns is-gapless">
+    <div class="column is-2 sidebar" style="background: #0d0d14;">
+      <aside class="menu p-3">
+        <p class="menu-label">Navegación</p>
+        <ul class="menu-list">
+          <li><a href="/admin/"><span class="icon"><i class="fas fa-chart-pie"></i></span> Dashboard</a></li>
+          <li><a href="/admin/clients.html"><span class="icon"><i class="fas fa-users"></i></span> Clientes</a></li>
+          <li><a href="/admin/tickets.html"><span class="icon"><i class="fas fa-ticket"></i></span> Tickets</a></li>
+          <li><a href="/admin/outages.html"><span class="icon"><i class="fas fa-exclamation-triangle"></i></span> Cortes</a></li>
+          <li><a href="/admin/surveys.html"><span class="icon"><i class="fas fa-star"></i></span> Encuestas</a></li>
+          <li><a href="/admin/visits.html"><span class="icon"><i class="fas fa-truck"></i></span> Visitas</a></li>
+          <li><a href="/admin/templates.html" class="is-active"><span class="icon"><i class="fas fa-file-alt"></i></span> Plantillas</a></li>
+        </ul>
+      </aside>
+    </div>
+    <div class="column p-5">
+      <h1 class="title is-3">Plantillas de Mensajes</h1>
+      <p class="subtitle is-6">Vista previa de las plantillas que el bot usa en las conversaciones.</p>
+
+      <div class="columns is-multiline mt-4">
+        <div class="column is-6">
+          <div class="card template-card" onclick="showPreview('welcome')">
+            <header class="card-header"><p class="card-header-title">Menú Principal</p></header>
+            <div class="card-content"><pre class="is-size-7 has-text-grey-light" style="background: #0d0d14;">🙌 Hola! Soy *NetSurBot*...
+
+1️⃣ Problemas de Internet
+2️⃣ Facturación
+3️⃣ Gestión de Servicios
+4️⃣ Estado de Reclamos
+5️⃣ Hablar con Operador
+6️⃣ Estado del Servicio
+7️⃣ Solicitar Visita Técnica
+8️⃣ Historial de Consultas</pre></div>
+          </div>
+        </div>
+        <div class="column is-6">
+          <div class="card template-card" onclick="showPreview('internet')">
+            <header class="card-header"><p class="card-header-title">Diagnóstico de Internet</p></header>
+            <div class="card-content"><pre class="is-size-7 has-text-grey-light" style="background: #0d0d14;">🌐 Problemas de Internet
+
+1️⃣ Sin conexión
+2️⃣ Internet lento
+3️⃣ Cortes frecuentes
+4️⃣ Luz roja en el módem
+5️⃣ Volver al menú</pre></div>
+          </div>
+        </div>
+        <div class="column is-6">
+          <div class="card template-card" onclick="showPreview('billing')">
+            <header class="card-header"><p class="card-header-title">Facturación</p></header>
+            <div class="card-content"><pre class="is-size-7 has-text-grey-light" style="background: #0d0d14;">🧾 Facturación
+
+1️⃣ Consultar deuda pendiente
+2️⃣ Ver próxima factura
+3️⃣ Historial de facturas
+4️⃣ Medios de pago
+5️⃣ Volver al menú</pre></div>
+          </div>
+        </div>
+        <div class="column is-6">
+          <div class="card template-card" onclick="showPreview('services')">
+            <header class="card-header"><p class="card-header-title">Gestión de Servicios</p></header>
+            <div class="card-content"><pre class="is-size-7 has-text-grey-light" style="background: #0d0d14;">📡 Gestión de Servicios
+
+1️⃣ Ver mi plan actual
+2️⃣ Ver planes disponibles
+3️⃣ Solicitar cambio de plan
+4️⃣ Volver al menú principal</pre></div>
+          </div>
+        </div>
+        <div class="column is-6">
+          <div class="card template-card" onclick="showPreview('payment')">
+            <header class="card-header"><p class="card-header-title">Medios de Pago</p></header>
+            <div class="card-content"><pre class="is-size-7 has-text-grey-light" style="background: #0d0d14;">💳 Medios de Pago
+
+🏦 Transferencia Bancaria
+  CBU: 0000003100012345678901
+  Titular: NetSur Conectividad
+
+💻 Mercado Pago
+📍 Pago Fácil / Rapipago
+💳 Tarjeta de crédito/débito</pre></div>
+          </div>
+        </div>
+        <div class="column is-6">
+          <div class="card template-card" onclick="showPreview('survey')">
+            <header class="card-header"><p class="card-header-title">Encuesta de Satisfacción</p></header>
+            <div class="card-content"><pre class="is-size-7 has-text-grey-light" style="background: #0d0d14;">📝 Encuesta de Satisfacción
+
+1 ⭐ - Muy mala
+2 ⭐ - Mala
+3 ⭐ - Regular
+4 ⭐ - Buena
+5 ⭐ - Excelente</pre></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal" id="previewModal">
+        <div class="modal-background" onclick="closePreview()"></div>
+        <div class="modal-card">
+          <header class="modal-card-head">
+            <p class="modal-card-title" id="previewTitle">Plantilla</p>
+            <button class="delete" onclick="closePreview()"></button>
+          </header>
+          <section class="modal-card-body">
+            <pre id="previewContent" style="white-space: pre-wrap; background: #0d0d14; color: #adb5bd; padding: 1rem;"></pre>
+          </section>
+          <footer class="modal-card-foot">
+            <button class="button" onclick="closePreview()">Cerrar</button>
+          </footer>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelector('.navbar-burger')?.addEventListener('click', () => {
+        document.getElementById('navMenu')?.classList.toggle('is-active')
+      })
+    })
+
+    const templates = {
+      welcome: { title: 'Menú Principal', content: `🙌 Hola! Soy *NetSurBot*, el asistente virtual de *NetSur Conectividad*.
+
+Elegí una opción para continuar:
+
+1️⃣ *Problemas de Internet*
+2️⃣ *Facturación*
+3️⃣ *Gestión de Servicios / Cambio de Plan*
+4️⃣ *Estado de Reclamos*
+5️⃣ *Hablar con un Operador*
+6️⃣ *Estado del Servicio*
+7️⃣ *Solicitar Visita Técnica*
+8️⃣ *Historial de Consultas*
+
+O simplemente escribí tu consulta con tus palabras.` },
+      internet: { title: 'Diagnóstico de Internet', content: `🌐 *Problemas de Internet*
+
+Seleccioná tu situación:
+
+1️⃣ *Sin conexión*
+2️⃣ *Internet lento*
+3️⃣ *Cortes frecuentes*
+4️⃣ *Luz roja en el módem*
+5️⃣ *Volver al menú principal*` },
+      billing: { title: 'Facturación', content: `🧾 *Facturación*
+
+Seleccioná una opción:
+
+1️⃣ *Consultar deuda pendiente*
+2️⃣ *Ver próxima factura*
+3️⃣ *Historial de facturas*
+4️⃣ *Medios de pago*
+5️⃣ *Volver al menú principal*` },
+      services: { title: 'Gestión de Servicios', content: `📡 *Gestión de Servicios*
+
+Seleccioná una opción:
+
+1️⃣ *Ver mi plan actual*
+2️⃣ *Ver planes disponibles*
+3️⃣ *Solicitar cambio de plan*
+4️⃣ *Volver al menú principal*` },
+      payment: { title: 'Medios de Pago', content: `💳 *Medios de Pago*
+
+🏦 *Transferencia Bancaria*
+  CBU: 0000003100012345678901
+  Titular: NetSur Conectividad
+
+💻 *Mercado Pago*
+  A través de la app de Mercado Pago
+
+📍 *Pago Fácil / Rapipago*
+  Con el código de barras de tu factura
+
+💳 *Tarjeta de crédito/débito*
+  En nuestras oficinas o vía link de pago` },
+      survey: { title: 'Encuesta de Satisfacción', content: `📝 *Encuesta de Satisfacción*
+
+¿Cómo calificarías tu experiencia?
+
+1 ⭐ - Muy mala
+2 ⭐ - Mala
+3 ⭐ - Regular
+4 ⭐ - Buena
+5 ⭐ - Excelente
+
+*Respondé con un número del 1 al 5:*` }
+    }
+
+    function showPreview(key) {
+      const t = templates[key]
+      if (!t) return
+      document.getElementById('previewTitle').textContent = t.title
+      document.getElementById('previewContent').textContent = t.content
+      document.getElementById('previewModal').classList.add('is-active')
+    }
+
+    function closePreview() {
+      document.getElementById('previewModal').classList.remove('is-active')
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NetSur Admin</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    * { box-shadow: none !important; }
+    body { background: #f5f7fb; min-height: 100vh; }
+    .app-shell { display: grid; grid-template-columns: 232px 1fr; min-height: 100vh; }
+    .sidebar { background: #102033; color: #fff; padding: 1rem; }
+    .brand { color: #fff; font-size: 1.2rem; font-weight: 700; margin-bottom: 1.5rem; }
+    .nav-button { align-items: center; background: transparent; border: 1px solid transparent; color: #c8d3df; cursor: pointer; display: flex; gap: .65rem; padding: .7rem .8rem; width: 100%; }
+    .nav-button:hover, .nav-button.is-active { background: #203650; border-color: #3b536f; color: #fff; }
+    .main { padding: 1.25rem; overflow: hidden; }
+    .toolbar, .panel, .table-wrap { background: #fff; border: 1px solid #dce3ec; border-radius: 8px; }
+    .toolbar { align-items: center; display: flex; gap: .75rem; justify-content: space-between; margin-bottom: 1rem; padding: .85rem; }
+    .panel { padding: 1rem; }
+    .table-wrap { overflow: auto; }
+    .table td, .table th { vertical-align: middle; white-space: nowrap; }
+    .table th { background: #edf2f7; color: #1c2b3a; font-size: .78rem; text-transform: uppercase; }
+    .crud-layout { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr) 360px; }
+    .form-grid { display: grid; gap: .75rem; }
+    .muted { color: #697789; }
+    .pill { border: 1px solid #cbd6e2; border-radius: 999px; display: inline-flex; font-size: .78rem; padding: .15rem .55rem; }
+    .actions { display: flex; gap: .4rem; }
+    .button { border-radius: 6px; }
+    textarea.textarea { min-height: 6rem; }
+    @media (max-width: 960px) {
+      .app-shell { grid-template-columns: 1fr; }
+      .sidebar { display: grid; gap: .5rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .brand { grid-column: 1 / -1; margin-bottom: .25rem; }
+      .crud-layout { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><i class="fa-solid fa-network-wired"></i> NetSur Admin</div>
+      <div id="resourceNav"></div>
+    </aside>
+
+    <main class="main">
+      <div class="toolbar">
+        <div>
+          <h1 id="title" class="title is-4 mb-1">Administración</h1>
+          <p id="subtitle" class="muted">CRUD completo del backend simulado</p>
+        </div>
+        <div class="field has-addons mb-0">
+          <div class="control">
+            <input id="search" class="input" type="search" placeholder="Buscar">
+          </div>
+          <div class="control">
+            <button id="newBtn" class="button is-link"><i class="fa-solid fa-plus"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="crud-layout">
+        <section class="table-wrap">
+          <table class="table is-fullwidth is-hoverable mb-0">
+            <thead id="tableHead"></thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </section>
+
+        <aside class="panel">
+          <div class="is-flex is-justify-content-space-between is-align-items-center mb-3">
+            <h2 id="formTitle" class="title is-5 mb-0">Nuevo registro</h2>
+            <span id="count" class="pill">0 items</span>
+          </div>
+          <form id="crudForm" class="form-grid"></form>
+          <div class="buttons mt-4">
+            <button id="saveBtn" class="button is-link" type="button"><i class="fa-solid fa-floppy-disk mr-2"></i>Guardar</button>
+            <button id="resetBtn" class="button" type="button"><i class="fa-solid fa-rotate-left mr-2"></i>Limpiar</button>
+          </div>
+          <p id="message" class="help"></p>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const labels = {
+      clients: 'Clientes',
+      plans: 'Planes',
+      bills: 'Facturas',
+      tickets: 'Reclamos',
+      outages: 'Cortes',
+      surveys: 'Encuestas',
+      visits: 'Visitas',
+      escalations: 'Derivaciones',
+    }
+
+    const icons = {
+      clients: 'fa-users',
+      plans: 'fa-wifi',
+      bills: 'fa-file-invoice-dollar',
+      tickets: 'fa-ticket',
+      outages: 'fa-triangle-exclamation',
+      surveys: 'fa-star',
+      visits: 'fa-truck',
+      escalations: 'fa-headset',
+    }
+
+    const schemas = {
+      clients: [
+        ['id', 'text'], ['name', 'text'], ['address', 'text'], ['phone', 'text'],
+        ['documentNumber', 'text'], ['planId', 'text'], ['planName', 'text'],
+        ['status', 'select:active,suspended'], ['createdAt', 'datetime-local'],
+      ],
+      plans: [
+        ['id', 'text'], ['name', 'text'], ['speed', 'text'], ['price', 'number'],
+        ['description', 'textarea'], ['features', 'list'],
+      ],
+      bills: [
+        ['id', 'text'], ['clientId', 'text'], ['amount', 'number'], ['dueDate', 'date'],
+        ['paid', 'checkbox'], ['paidAt', 'datetime-local'], ['period', 'text'], ['downloadUrl', 'text'],
+      ],
+      tickets: [
+        ['id', 'text'], ['clientId', 'text'], ['clientName', 'text'],
+        ['category', 'select:internet,billing,technical_visit,commercial,other'],
+        ['priority', 'select:low,medium,high'],
+        ['status', 'select:open,in_progress,resolved,closed'],
+        ['description', 'textarea'], ['resolution', 'textarea'],
+        ['createdAt', 'datetime-local'], ['updatedAt', 'datetime-local'],
+      ],
+      outages: [
+        ['id', 'text'], ['zone', 'text'], ['description', 'textarea'],
+        ['startTime', 'datetime-local'], ['estimatedEndTime', 'datetime-local'],
+        ['status', 'select:active,resolved'],
+      ],
+      surveys: [
+        ['id', 'text'], ['clientId', 'text'], ['rating', 'number'], ['comment', 'textarea'], ['createdAt', 'datetime-local'],
+      ],
+      visits: [
+        ['id', 'text'], ['clientId', 'text'], ['clientName', 'text'], ['address', 'text'],
+        ['timeSlot', 'text'], ['description', 'textarea'],
+        ['status', 'select:pending,scheduled,completed,cancelled'], ['createdAt', 'datetime-local'],
+      ],
+      escalations: [
+        ['id', 'text'], ['clientId', 'text'], ['clientName', 'text'], ['category', 'text'],
+        ['description', 'textarea'], ['createdAt', 'datetime-local'],
+      ],
+    }
+
+    let currentResource = 'clients'
+    let rows = []
+    let selectedId = null
+
+    const nav = document.getElementById('resourceNav')
+    const form = document.getElementById('crudForm')
+    const tableHead = document.getElementById('tableHead')
+    const tableBody = document.getElementById('tableBody')
+    const message = document.getElementById('message')
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;',
+      })[char])
+    }
+
+    function fromApiDate(value) {
+      if (!value || typeof value !== 'string') return ''
+      return value.includes('T') ? value.slice(0, 16) : value
+    }
+
+    function toApiValue(field, type) {
+      const input = form.elements[field]
+      if (type === 'checkbox') return input.checked
+      if (type === 'number') return input.value === '' ? null : Number(input.value)
+      if (type === 'list') return input.value.split(',').map(v => v.trim()).filter(Boolean)
+      if (type === 'datetime-local') return input.value ? new Date(input.value).toISOString() : ''
+      return input.value
+    }
+
+    function displayValue(value) {
+      if (Array.isArray(value)) return value.join(', ')
+      if (typeof value === 'boolean') return value ? 'Sí' : 'No'
+      return value ?? ''
+    }
+
+    function setMessage(text, ok = true) {
+      message.textContent = text
+      message.className = ok ? 'help is-success' : 'help is-danger'
+    }
+
+    function renderNav(resources) {
+      nav.innerHTML = resources.map(resource => `
+        <button class="nav-button ${resource === currentResource ? 'is-active' : ''}" data-resource="${resource}">
+          <i class="fa-solid ${icons[resource] || 'fa-database'}"></i>
+          <span>${labels[resource] || resource}</span>
+        </button>
+      `).join('')
+      nav.querySelectorAll('button').forEach(button => {
+        button.addEventListener('click', () => loadResource(button.dataset.resource))
+      })
+    }
+
+    function renderForm(row = {}) {
+      selectedId = row.id || null
+      document.getElementById('formTitle').textContent = selectedId ? `Editar ${selectedId}` : 'Nuevo registro'
+      form.innerHTML = schemas[currentResource].map(([field, type]) => {
+        const baseType = type.split(':')[0]
+        const rawValue = row[field]
+        const value = baseType === 'datetime-local' ? fromApiDate(rawValue) : displayValue(rawValue)
+        const disabled = selectedId && field === 'id' ? 'disabled' : ''
+        if (baseType === 'textarea' || baseType === 'list') {
+          return `<label class="field"><span class="label">${field}</span><textarea name="${field}" class="textarea" ${disabled}>${escapeHtml(value)}</textarea></label>`
+        }
+        if (baseType === 'select') {
+          const options = type.split(':')[1].split(',')
+          return `<label class="field"><span class="label">${field}</span><span class="select is-fullwidth"><select name="${field}" ${disabled}>${options.map(option => `<option value="${option}" ${option === rawValue ? 'selected' : ''}>${option}</option>`).join('')}</select></span></label>`
+        }
+        if (baseType === 'checkbox') {
+          return `<label class="checkbox"><input name="${field}" type="checkbox" ${rawValue ? 'checked' : ''}> ${field}</label>`
+        }
+        return `<label class="field"><span class="label">${field}</span><input name="${field}" class="input" type="${baseType}" value="${escapeHtml(value)}" ${disabled}></label>`
+      }).join('')
+    }
+
+    function renderTable() {
+      const query = document.getElementById('search').value.toLowerCase()
+      const filtered = rows.filter(row => JSON.stringify(row).toLowerCase().includes(query))
+      const columns = schemas[currentResource].map(([field]) => field)
+      document.getElementById('count').textContent = `${filtered.length} items`
+      tableHead.innerHTML = `<tr>${columns.map(col => `<th>${col}</th>`).join('')}<th>Acciones</th></tr>`
+      tableBody.innerHTML = filtered.map(row => `
+        <tr>
+          ${columns.map(col => `<td>${escapeHtml(displayValue(row[col]))}</td>`).join('')}
+          <td>
+            <div class="actions">
+              <button class="button is-small" data-edit="${row.id}" title="Editar"><i class="fa-solid fa-pen"></i></button>
+              <button class="button is-small is-danger" data-delete="${row.id}" title="Eliminar"><i class="fa-solid fa-trash"></i></button>
+            </div>
+          </td>
+        </tr>
+      `).join('')
+      tableBody.querySelectorAll('[data-edit]').forEach(button => {
+        button.addEventListener('click', () => renderForm(rows.find(row => row.id === button.dataset.edit)))
+      })
+      tableBody.querySelectorAll('[data-delete]').forEach(button => {
+        button.addEventListener('click', () => deleteRow(button.dataset.delete))
+      })
+    }
+
+    async function loadResource(resource) {
+      currentResource = resource
+      selectedId = null
+      document.getElementById('title').textContent = labels[resource] || resource
+      document.getElementById('subtitle').textContent = `Alta, edición y baja de ${labels[resource] || resource}`
+      nav.querySelectorAll('button').forEach(button => button.classList.toggle('is-active', button.dataset.resource === resource))
+      rows = await fetch(`/api/admin/${resource}`).then(res => res.json())
+      renderForm()
+      renderTable()
+      setMessage('')
+    }
+
+    async function saveRow() {
+      const payload = {}
+      schemas[currentResource].forEach(([field, type]) => {
+        payload[field] = toApiValue(field, type.split(':')[0])
+      })
+      const url = selectedId ? `/api/admin/${currentResource}/${selectedId}` : `/api/admin/${currentResource}`
+      const method = selectedId ? 'PUT' : 'POST'
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const data = await res.json()
+      if (!res.ok) return setMessage(data.error || 'No se pudo guardar', false)
+      await loadResource(currentResource)
+      renderForm(data)
+      setMessage('Registro guardado')
+    }
+
+    async function deleteRow(id) {
+      if (!confirm(`Eliminar ${id}?`)) return
+      const res = await fetch(`/api/admin/${currentResource}/${id}`, { method: 'DELETE' })
+      const data = await res.json()
+      if (!res.ok) return setMessage(data.error || 'No se pudo eliminar', false)
+      await loadResource(currentResource)
+      setMessage('Registro eliminado')
+    }
+
+    document.getElementById('saveBtn').addEventListener('click', saveRow)
+    document.getElementById('resetBtn').addEventListener('click', () => renderForm())
+    document.getElementById('newBtn').addEventListener('click', () => renderForm())
+    document.getElementById('search').addEventListener('input', renderTable)
+
+    fetch('/api/admin/resources')
+      .then(res => res.json())
+      .then(resources => {
+        renderNav(resources)
+        return loadResource(currentResource)
+      })
+      .catch(() => setMessage('No se pudo conectar con la API', false))
+  </script>
+</body>
+</html>
